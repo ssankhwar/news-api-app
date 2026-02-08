@@ -1,81 +1,76 @@
-import React, { Component } from 'react'
+import React, { useEffect, useState } from 'react'
 import NewsItem from './NewsItem'
 import Loading from './Loading';
+import InfiniteScroll from "react-infinite-scroll-component";
 
-export class News extends Component {
+const News= (props)=>  {
+const [articles,setArticles] = useState([0]);
+const [page,setPage] = useState(1);
+const [loading,setLoading] = useState(true);
+const [totalResults,setTotalResults] = useState(0);
 
-  constructor(props){
-    super(props);
-    this.state = {
-      articles : [],
-      page : 1,
-      loading : false
-  }
-  document.title = this.capitalize(this.props.category)
-}
 
- capitalize(string){
+
+  const capitalize=(string)=>{
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
-  async updatePage(){
-  let data = await fetch(`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=fc0a3d4ee559420b95796cd9a59a9b5e&page=${this.state.page}&pageSize=${this.props.pageSize}`);
-    this.setState({
-      loading : true
-    })
+const loadNews = async ()=> {
+     props.setProgress(10);
+    const data = await fetch(`https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page}&pageSize=${props.pageSize}`);
+    setLoading(true);
+    props.setProgress(50);
     let parseData = await data.json();
-    this.setState({
-      articles : parseData.articles,
-      loading : false
-    })
-
-   }
-  async componentDidMount()
-  {
-   this.updatePage();
+     props.setProgress(75);
+     setArticles(parseData.articles);
+     setLoading(false);
+     setTotalResults(parseData.totalResults)
+    props.setProgress(100);
   }
 
-    gotoNextPage =async ()=>{
-      this.setState({
-         page: this.state.page +1,
-        })
-        this.updatePage();
-      }
-
-   gotoPreviousPage =async ()=>{
-    this.setState({
-            page: this.state.page -1,
-        })
-        this.updatePage();
-  }
- 
-  
-  render() {
+  useEffect(() => {
+    document.title = capitalize(props.category)
+    loadNews();
+   // eslint-disable-next-line
     
+ },[])
 
+ const fetchMoreData = async ()=> {
+    const data = await fetch(`https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page +1}&pageSize=${props.pageSize}`);
+    setPage(page +1)
+    let parseData = await data.json();
+    setArticles(articles.concat(parseData.articles))
+    setTotalResults(parseData.totalResults)
+  }
+  
     return (
       <>
-      <div className='container my-3'>
         <h2 className='text-center'>NewsMantra - Top Headlines</h2>
-         {this.state.loading && <Loading/>}
+         {loading && <Loading/>}
+          <InfiniteScroll
+          dataLength={articles.length}
+          next={fetchMoreData}
+          hasMore={articles.length !== totalResults}
+          loader={<Loading/>}
+        >
+        <div className="container">
+
         <div className="row">
           
-          {!this.state.loading && this.state.articles.map((e)=>{
-            return <div className="col-md-4" key={e.url}>
+          { articles.map((e, index)=>{
+            return <div className="col-md-4" key={`${e.url}-${index}`}>
                 <NewsItem title={e.title}  description={e.description} imageUrl={e.urlToImage} keyId={e.url} author={e.author} date={e.publishedAt}
-                source={e.source.name} /> 
+                // source={e.source.name}
+                 /> 
             </div>
           })
-          }
+        }
         </div>
-      </div>
-      <div className='container d-flex justify-content-between my-3'>
-        <button disabled={this.state.page <=1} className='btn btn-dark' onClick={this.gotoPreviousPage}> &#8592; Previous </button>
-        <button disabled={this.state.page +1 > Math.floor(100/this.props.pageSize)} className='btn btn-dark' onClick={this.gotoNextPage}>Next &#x2192;</button>
         </div>
+        </InfiniteScroll>
       </>
     )
   }
-}
 
-export default News
+
+export default News;

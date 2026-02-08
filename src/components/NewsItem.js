@@ -1,29 +1,25 @@
-import React, { Component } from 'react'
+import React from 'react'
 import altImage from './resources/alterImage.jpg';
 
-export class NewsItem extends Component {
-  render() { 
-    let {title, description, imageUrl, author, date, source} = this.props;
-
-   
- 
+const NewsItem = (props)=> {
+    let {title, description, imageUrl, author, date, source} = props;
     return (
       <div  className='container my-3'>
        <div className="card">
-    <img src={imageUrl} onError={(e) => {
-    console.warn("Fetched Image failed to load:", imageUrl);
-    e.target.src = altImage;
-  }}className="card-img-top" alt="..."/>
+        <div style={{display:"flex",justifyContent:"flex-end",position: "absolute", right: "0"}}>
+        <span className="badge  rounded-pill bg-danger">{source}</span> 
+      </div>
+       <img src={!imageUrl? altImage: imageUrl} 
+       className="card-img-top" alt="..."/>
     <div className="card-body">
-    <h5 className="card-title">{title} <span className="position-absolute top-0 translate-middle badge rounded-pill bg-danger" style={{zIndex:"1", left:"95%"}}>{source}</span></h5>
+    <h5 className="card-title">{title}  </h5>
     <p className="card-text">{description}</p>
     <p className="card-text"><small className="text-body-secondary">By {!author? "Unknown":author} on {date}</small></p>
-    <a href={this.props.keyId} target="_blank" rel="noreferrer" className="btn btn-sm btn-dark">Read more...</a>
+    <a href={props.keyId} target="_blank" rel="noreferrer" className="btn btn-sm btn-dark">Read more...</a>
   </div>
 </div>
       </div>
     )
-  }
 }
 
-export default NewsItem
+export default NewsItem;
